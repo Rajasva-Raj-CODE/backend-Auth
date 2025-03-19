@@ -20,7 +20,18 @@ export const register = async (req, res) => {
             tc: tc,
           });
           await doc.save();
-          res.status(201).send({ status: "success", message: "User registered successfully" });
+          const saved_user = await User.findOne({ email: email });
+          //Generate JWT token
+          const token = jwt.sign(
+            { userID: saved_user._id },
+            process.env.JWT_SECERT_KEY,
+            { expiresIn: "5d" }
+          );
+          res.status(201).send({
+            status: "success",
+            message: "User registered successfully",
+            token: token,
+          });
         } catch (error) {
           res.send({ status: "failed", message: "unable to register" });
         }
@@ -34,8 +45,40 @@ export const register = async (req, res) => {
       res.send({ status: "failed", message: "Please fill all the fields" });
     }
   }
-}; 
+};
 
-export const userLogin = async (req,res)=>{
-  
-}
+export const userLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (email && password) {
+      const user = await User.findOne({ email: email });
+      if (user !== null) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (user.email === email && isMatch) {
+          //Generate JWT token
+          const token = jwt.sign(
+            { userID: user._id },
+            process.env.JWT_SECERT_KEY,
+            { expiresIn: "5d" }
+          );
+          res.send({
+            status: "success",
+            message: "Login Successful",
+            token: token,
+          });
+        } else {
+          res.send({
+            status: "failed",
+            message: "Email or password is incorrect",
+          });
+        }
+      } else {
+        res.send({ status: "failed", message: "you are not registered user" });
+      }
+    } else {
+      res.send({ status: "failed", message: "Please fill all the fields" });
+    }
+  } catch (error) {
+    res.send({ status: "failed", message: "unable to login" });
+  }
+};
