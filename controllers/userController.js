@@ -20,6 +20,7 @@ export const register = async (req, res) => {
             tc: tc,
           });
           await doc.save();
+          res.status(201).send({ status: "success", message: "User registered successfully" });
         } catch (error) {
           res.send({ status: "failed", message: "unable to register" });
         }
@@ -33,4 +34,8 @@ export const register = async (req, res) => {
       res.send({ status: "failed", message: "Please fill all the fields" });
     }
   }
-};
+}; 
+
+export const userLogin = async (req,res)=>{
+  
+}
